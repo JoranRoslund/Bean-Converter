@@ -34,7 +34,7 @@ def convertFile(filename):
         bandPattern = re.compile("frequencyBand")
         cellRefPattern = re.compile("ref bean=\"" + nodenameCell + \
             "_node-S\dC\d")
-        nodeSectorPattern = re.compile("id=\"(3x\d)-(sector\d)")
+        nodeSectorPattern = re.compile("\"(3x\d)-(sector\d)")
 
         for line in content:
             outline = line
