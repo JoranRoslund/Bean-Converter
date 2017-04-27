@@ -34,6 +34,7 @@ def convertFile(filename):
         bandPattern = re.compile("frequencyBand")
         cellRefPattern = re.compile("ref bean=\"" + nodenameCell + \
             "_node-S\dC\d")
+        nodeSectorPattern = re.compile("id=\"(3x\d)-(sector\d)")
 
         for line in content:
             outline = line
@@ -67,6 +68,14 @@ def convertFile(filename):
             # Change frequency band to 8
             if bandPattern.search(line) and not excluding:
                 outline = line.replace("1", "8")
+
+            # Change name of sector-resource bean in LI
+            sectorMatch = nodeSectorPattern.search(line) 
+            if environment=="LI" and sectorMatch and not excluding:
+                config = sectorMatch.group(1)
+                sector = sectorMatch.group(2)
+                outline = line.replace(config + "-" + sector,
+                                       sector + "-" + config)
 
             # Exclude beans found in common files
             if (antennaResourcePattern.search(line) or \
@@ -141,5 +150,5 @@ if len(sys.argv) > 1:
     replaceFiles()
     fixRadioConfigs()
 else:
-    print "Usage: python commonator.py <NODENAME> [<SITE>]"
+    print "Usage: python beanConverter.py <NODENAME> [<SITE>]"
     
