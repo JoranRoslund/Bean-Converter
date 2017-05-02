@@ -94,6 +94,36 @@ def convertFile(filename):
     os.system("mv tmpfile " + filename)
 
 #############################################################################
+# Converts a netconf file to use band 8
+#############################################################################
+def modifyNetconfFile():
+    filename = "../netconf/netconf_WRAT_RN_Basic.xml" 
+    with open(filename) as theFile:
+        outfile = open('tmpfile', 'w')
+        content = theFile.readlines()
+
+        bandPattern = re.compile("<operatingBand>(\d)</operatingBand>")
+        fcnPattern = re.compile("<uarfcnDl>(\d+)</uarfcnDl")
+
+        for line in content:
+            outline = line
+
+            bandMatch =  bandPattern.search(line)
+            if bandMatch:
+                currentBand = bandMatch.group(1)
+                outline = line.replace(currentBand, "8")
+
+            fcnMatch = fcnPattern.search(line)
+            if fcnMatch:
+                currentFcn = fcnMatch.group(1)
+                outline = line.replace(currentFcn, "2991")
+
+            outfile.write(outline)
+    
+    os.system("rm " + filename)
+    os.system("mv tmpfile " + filename)
+
+#############################################################################
 # Replaces node-unique files with links to common files
 #############################################################################
 def replaceFiles():
@@ -149,6 +179,8 @@ if len(sys.argv) > 1:
 
     replaceFiles()
     fixRadioConfigs()
+    if environment == "LI":
+        modifyNetconfFile()
 else:
     print "Usage: python beanConverter.py <NODENAME> [<SITE>]"
     
