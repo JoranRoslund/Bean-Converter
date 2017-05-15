@@ -1,5 +1,14 @@
 #!/usr/bin/python
 
+##############################################################################
+#
+# Script that connects one or several nodes to common DPAD bean files
+#
+# After running this, remember to connect node to DPAD_NODE-RU* in
+# Eris.
+#
+##############################################################################
+
 import os
 import re
 import subprocess
@@ -64,7 +73,7 @@ def cleanBeans(filename, nodename, site):
             outline = line
 
             if ruNamePattern.search(line) and not excluding:
-                outline = line.replace(ruNameBase, "DPAD")
+                outline = line.replace(ruNameBase, "DPAD_NODE")
 
             # Exclude beans found in common files
             if (ruPattern.search(line) or \
