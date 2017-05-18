@@ -47,7 +47,8 @@ def issueCommand(command):
 ###############################################################################
 def cleanBeans(filename, nodename, site):
     # Set to True if we are excluding a section of the file
-    excluding = False
+    beanExcluding = False
+    propExcluding = False
     with open(filename) as theFile:
         outfile = open('tmpfile', 'w')
         content = theFile.readlines()
@@ -62,6 +63,14 @@ def cleanBeans(filename, nodename, site):
             re.compile("bean class=\"NodeBRadioConfigurationResource")
         sectorPattern = re.compile("bean class=\"NodeBSectorResource")
         beanEndPattern = re.compile("</bean>")
+        dataResourcePattern = re.compile("<bean class=\"G2NodeBDataResource.+>")
+        radioConfPattern = re.compile("<property name=\"alternativeRadioConfigurations")
+        cellsPattern = re.compile("<property name=\"cells")
+        sectorsPattern = re.compile("<property name=\"sectors")
+        rbsResourcePattern = re.compile("<bean class=\"G2RbsResource.+>")
+        radioUnitsPattern = re.compile("<property name=\"radioUnits")
+        propertyEndPattern = re.compile("</property>")
+
         if site == "ln":
             ruNameBase = nodename.upper()
         elif site == "li":
@@ -72,24 +81,41 @@ def cleanBeans(filename, nodename, site):
         for line in content:
             outline = line
 
-            if ruNamePattern.search(line) and not excluding:
+            if ruNamePattern.search(line):
                 outline = line.replace(ruNameBase, "DPAD_NODE")
 
-            # Exclude beans found in common files
-            if (ruPattern.search(line) or \
-                configPattern.search(line) or \
-                sectorPattern.search(line)):
-                excluding = True
+            if dataResourcePattern.search(line):
+                outline = line.replace("-NodeBData", "-NodeBData\" parent=\"DPAD_node-NodeBData")
 
-            if not excluding:
+            if rbsResourcePattern.search(line):
+                outline = line.replace("_node", "_node\" parent=\"DPAD_node-RbsData")
+
+            # Exclude beans found in common files
+            if ruPattern.search(line) or \
+               configPattern.search(line) or \
+               sectorPattern.search(line):
+                beanExcluding = True
+
+            # Exclude properties found in abstract beans
+            if not beanExcluding and (radioConfPattern.search(line) or \
+               cellsPattern.search(line) or \
+               sectorsPattern.search(line) or \
+               radioUnitsPattern.search(line)):
+                propExcluding = True
+
+            if not (beanExcluding or propExcluding):
                 outfile.write(outline)
 
             # Stop excluding when we find the end of the bean
-            if excluding and beanEndPattern.search(line):
-                excluding = False
+            if beanExcluding and beanEndPattern.search(line):
+                beanExcluding = False
+            # or the end of the property
+            if propExcluding and propertyEndPattern.search(line):
+                propExcluding = False
 
-    issueCommand("rm " + filename)
-    issueCommand("mv tmpfile " + filename)
+    if not debug:
+        issueCommand("rm " + filename)
+        issueCommand("mv tmpfile " + filename)
 
 ###############################################################################
 # Fixes a node
